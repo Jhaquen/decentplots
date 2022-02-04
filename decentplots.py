@@ -57,7 +57,7 @@ class decentplot:
             return {
                 "s":self.ms
             }
-            
+
     @classmethod
     def scatter(self, ax, data, **kwargs):
         #########################################
@@ -82,16 +82,6 @@ class decentplot:
         #   legend: str
         self.__init__(self, ax, data, kwargs)
         line = self.TwoDPlot(data, ax.plot, "plot")
-
-        """
-        if self.datatype == "2D": 
-            x_data, y_data = self.get2Ddata(data,self.datatype)
-            line, = ax.plot(x_data, y_data, c=self.color, lw=self.lw, ls=self.ls)
-        elif self.datatype == "dict":
-            for x_data, y_data, label in self.get2Ddata(data,self.datatype):
-                line, = ax.plot(x_data, y_data, c=self.color[label], lw=self.lw, ls=self.ls)
-                line.set_label(label)
-        """
 
         ####################
         #     Styling      #
