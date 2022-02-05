@@ -1,6 +1,7 @@
-from random import randint
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.optimize import curve_fit
+from scipy.stats import linregress
 
 class decentplot:
 
@@ -27,17 +28,6 @@ class decentplot:
         self.ms = 1 if "ms" not in kwargs_keys else kwargs["ms"]
  
     @classmethod
-    def TwoDPlot(self, data, func, typ):
-        if self.datatype == "2D": 
-            x_data, y_data = self.get2Ddata(data,self.datatype)
-            actor = func(x_data, y_data, **self.getKwargs(typ))
-        elif self.datatype == "dict":
-            for x_data, y_data, label in self.get2Ddata(data,self.datatype):
-                actor = func(x_data, y_data, **self.getKwargs(typ,label=label))
-                if type(actor)==list: actor[0].set_label(label)
-        return actor
-    
-    @classmethod
     def getKwargs(self, typ, **kwargs):
         # Passing base values for kwargs
         if typ=="plot":
@@ -55,8 +45,21 @@ class decentplot:
                 }
         elif typ=="scatter":
             return {
-                "s":self.ms
+                "ms":self.ms,
+                "ls":"",
+                "marker":"o"
             }
+
+    @classmethod
+    def TwoDPlot(self, data, func, typ):
+        if self.datatype == "2D": 
+            x_data, y_data = self.get2Ddata(data,self.datatype)
+            actor = func(x_data, y_data, **self.getKwargs(typ))
+        elif self.datatype == "dict":
+            for x_data, y_data, label in self.get2Ddata(data,self.datatype):
+                actor = func(x_data, y_data, **self.getKwargs(typ,label=label))
+                actor.set_label(label)
+        return actor
 
     @classmethod
     def scatter(self, ax, data, **kwargs):
@@ -68,8 +71,7 @@ class decentplot:
         #   color: 
         #   ms: float
         self.__init__(self, ax, data, kwargs)
-        self.TwoDPlot(data, ax.scatter, "scatter")
-    
+        self.TwoDPlot(data, ax.errorbar, "scatter")
 
     @classmethod
     def line(self, ax, data, **kwargs):
@@ -81,7 +83,7 @@ class decentplot:
         #   color: str or [str,..] or {dataset:str,..}
         #   legend: str
         self.__init__(self, ax, data, kwargs)
-        line = self.TwoDPlot(data, ax.plot, "plot")
+        line = self.TwoDPlot(data, ax.errorbar, "plot")
 
         ####################
         #     Styling      #
@@ -102,6 +104,27 @@ class decentplot:
         
         return line
     
+    @classmethod
+    def fit(self, ax, data, fit_func, **kwargs):
+        #########################################
+        #   data: {"x":[],"y":[]} or {"y":[],data1/"data1":[],..}   
+        #   
+        #   kwargs      
+        # 
+        #   color: str or [str,..] or {dataset:str,..}
+        self.__init__(self, ax, data, kwargs)
+        scatter = self.TwoDPlot(data, ax.errorbar, "scatter")
+        fit_res = [
+            {
+                l:res for res,l in zip(curve_fit(fit_func, x_data, y_data),["popt","pcov"])
+            } for x_data, y_data, label in self.get2Ddata(data, self.datatype)
+        ]
+        for res in fit_res:
+            ax.plot(
+                np.linspace(*self.getDataBoundaries(data,self.datatype),1000),
+                fit_func(np.linspace(*self.getDataBoundaries(data,self.datatype),1000),*res["popt"])
+            )
+    
     @staticmethod
     def getDataType(data):
         # define how to treat data
@@ -121,7 +144,7 @@ class decentplot:
     def get2Ddata(data,datatype):
         if datatype == "2D":
             x_data = data["x"]; y_data = data["y"]
-            return x_data, y_data
+            return x_data, y_data, "y"
         elif datatype == "dict":
             x_data = data["x"]
             data_keys = list(data.keys())
@@ -147,18 +170,13 @@ if __name__ == "__main__":
 
     test_dict = {
         "x":np.linspace(200,600,999),
-        1:[np.random.randint(0,1000*i) for i in range(1,1000)],
-        2:[np.random.randint(0,1000*(i+2)) for i in range(1,1000)],
-        3:[np.random.randint(0,1000*3) for i in range(1,1000)],
-        4:[np.random.randint(0,1000*(i*23)) for i in range(1,1000)],
-        5:[np.random.randint(0,1000*i) for i in range(1,1000)],
-        6:[np.random.randint(0,1000*i) for i in range(1,1000)],
-        7:[np.random.randint(0,1000*i) for i in range(1,1000)]
+        1:[np.random.randint(0,1000*i) for i in range(1,1000)]
     }
 
     fig = plt.figure(figsize=(7,5))
-    ax = fig.add_subplot(211)
-    ax2 = fig.add_subplot(212)
+    ax = fig.add_subplot(221)
+    ax2 = fig.add_subplot(222)
+    ax3 = fig.add_subplot(223)
 
     decentplot.line(
         ax,
@@ -169,7 +187,13 @@ if __name__ == "__main__":
     decentplot.scatter(
         ax2,
         test_dict,
-        ms=10
+        ms=1
+    )
+
+    decentplot.fit(
+        ax3,
+        test_dict,
+        lambda x, m, b: b + m*x
     )
     plt.tight_layout()
     plt.show()
