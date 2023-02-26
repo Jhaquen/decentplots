@@ -1,9 +1,0 @@
-README.md
-setup.py
-decentplots/__init__.py
-decentplots/decentplots.py
-decentplots.egg-info/PKG-INFO
-decentplots.egg-info/SOURCES.txt
-decentplots.egg-info/dependency_links.txt
-decentplots.egg-info/requires.txt
-decentplots.egg-info/top_level.txt
