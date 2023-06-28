@@ -1,4 +1,3 @@
-from os import stat
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.colors as mpcol
@@ -6,7 +5,6 @@ import matplotlib.lines as mlines
 from matplotlib.ticker import (MultipleLocator,AutoMinorLocator)
 from scipy import stats
 import numpy as np
-from collections import defaultdict
 
 
 def niceboxplot(data,ax,**kwargs):
