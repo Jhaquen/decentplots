@@ -146,16 +146,37 @@ class Boxplot:
         if "color" in self.kwargs: self.colorBoxes()
     
     def colorBoxes(self):
-        if "groups" not in self.kwargs:
-            i = 0
-            while len(self.artist["boxes"]) > len(self.kwargs["color"]):
-                self.kwargs["color"].append(self.kwargs["color"][i])
-                i += 1
-            for col,box in zip(self.kwargs["color"],self.artist["boxes"]):
-                box.set_facecolor(col)
+        if "groups" not in self.kwargs: self.colorBoxes_NoGroups()
         else:
-            # color either boxes (len list == len group items) or groups (no list)
-            pass
+            if type(self.kwargs["color"]) == list: self.colorBoxes_DiffColorInGroup_List()
+            elif type(list(self.kwargs["color"].values())[0]) == tuple: self.colorBoxes_OneColorPerGroup_Dict()
+            else: raise Exception
+            
+    def colorBoxes_NoGroups(self):
+        i = 0
+        while len(self.artist["boxes"]) > len(self.kwargs["color"]):
+            self.kwargs["color"].append(self.kwargs["color"][i])
+            i += 1
+        for col,box in zip(self.kwargs["color"],self.artist["boxes"]):
+            box.set_facecolor(col)
+
+    def colorBoxes_DiffColorInGroup_List(self):
+        if len(list(self.kwargs["groups"].values())[0]) != len(list(self.kwargs["color"])): 
+            raise Exception("Length of list must be the same length as items per group")
+        else:
+            colors = [col for _ in self.kwargs["groups"] for col in self.kwargs["color"]]
+            for box,color in zip(self.artist["boxes"],colors):
+                box.set_facecolor(color)
+    
+    def colorBoxes_OneColorPerGroup_Dict(self):
+        colors = []
+        for group in self.kwargs["groups"]:
+            if group not in self.kwargs["color"]:
+                colors += [(.6,.6,.6) for _ in self.kwargs["groups"][group]]
+            else:
+                colors += [self.kwargs["color"][group] for _ in self.kwargs["groups"][group]]
+        for box,color in zip(self.artist["boxes"],colors):
+            box.set_facecolor(color)
     
     def styleSpines(self):
         self.ax.spines["right"].set_color("none"); 
