@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-import boxplot as box
+import sciplots02 as box
 import numpy as np
 
 testdata = {
@@ -10,10 +10,9 @@ fig = plt.figure(dpi=150,figsize=(8,5))
 ax = fig.add_subplot()
 plot = box.Boxplot(
     testdata,ax,
-    columns=[f"t{n}" for n in range(20)],
     groups={"test1":["t2","t3","t4"],"test3":["t10","t11","t12"],"test2":["t5","t7","t8"]},
-    color=[(0,0,0),(.2,.2,.2),(.5,.5,.5)],
-    legend={"bla":(0,0,0)}
+    color=[(.8,.1,.5,.4),(.2,.6,.2,.4),(.1,.5,.5,.4)],
+    legend={"bla":(0,0,0)},
+    compare=[["t2","t3"],["t10","t12"],["t5","t7"],["t5","t8"],["t3","t7"]]
 )
-print(plot.simpleStats)
 plt.show()
