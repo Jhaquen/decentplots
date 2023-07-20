@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from matplotlib.ticker import MultipleLocator
 import matplotlib.lines as mlines
+from statsIndicatorConnection import Indicator
 
 class Boxplot:
 
@@ -29,12 +30,12 @@ class Boxplot:
         self.setKwargDefaults()
         self.data = self.setDataColumns(data)
         self.calcStats()
-        self.boxXPosDict,self.boxXPos = self.calcBoxXPos()
+        self.GroupXPosMap,self.boxXPos = self.calcBoxXPos()
         self.artist = ax.boxplot(
             [vals.dropna() for _, vals in self.data.items()],
             patch_artist=True,widths=[self.kwargs["boxSize"] for _ in self.data.columns],positions=self.boxXPos
         )
-        self.boxMap = self.mapBoxesToData()
+        self.boxMap = self.mapBoxesXToData()
         if "compare" in self.kwargs:
             self.drawComparisonIndicators()
         self.stylePlot()
@@ -90,10 +91,11 @@ class Boxplot:
                     groupCenterX + ((itemnumber+groupnumber - groupCenterX)*ingroupdistance)
                     for itemnumber,_ in enumerate(col)
                 ]
-            return posdict,[v for key,val in posdict.items() for v in val]
+            return {np.mean(val):val for _,val in posdict.items()},[v for _,val in posdict.items() for v in val]
     
-    def mapBoxesToData(self):
-        return { item:box for box,item in zip(self.artist["boxes"],self.data) } 
+    def mapBoxesXToData(self):
+        upperWhiskers = [whisker for i,whisker in enumerate(self.artist["whiskers"]) if i%2==0]
+        return { item:{"index":index, "x":flier.get_path().get_extents().x0} for (index,flier),item in zip(enumerate(upperWhiskers),self.data) } 
 
     ##
     # Statistics
@@ -124,71 +126,10 @@ class Boxplot:
     #####
 
     def drawComparisonIndicators(self):
-        vLinePos = self.calcVLinePos()
-        heightMaps,heightMapSingle, vLinePos = self.calcConnectionHeight(vLinePos)
-        for dataset,vline in vLinePos.items():
-                # would be better to not do this with ax.plot()
-                if dataset in list(heightMapSingle.keys()):
-                    self.ax.plot(
-                        [vline["x"],vline["x"]],
-                        [vline["y"],heightMapSingle[dataset]],
-                        c="black",lw=1
-                    )
-        for comparison,heightMap in zip(self.kwargs["compare"], heightMaps):
-            self.ax.plot(
-                [vLinePos[heightMap["start"]]["x"],vLinePos[heightMap["end"]]["x"]],
-                [heightMap["height"],heightMap["height"]],
-                c="black",lw=1
-            )
-
-    def calcVLinePos(self):
-        # if there are fliers this should contain flier hights not whisker heights
-        whiskerPos = [whisker.get_path().get_extents() for i,whisker in enumerate(self.artist["whiskers"]) if i%2]
-        heightOffset = self.dataRange / 10
-        verticalLinePosAll = {label:[pos.x1,pos.y1 + heightOffset] for pos,label in zip(whiskerPos,self.data.columns)}
-        vLinePos = {}
-        for dataset, pos in verticalLinePosAll.items():
-            if dataset in [item for groups in self.kwargs["compare"] for item in groups]:
-                vLinePos[dataset]  = {"x":pos[0],"y":pos[1]}
-        return vLinePos
-
-    def calcConnectionHeight(self, verticalLines):
-        heightsComp = []
-        heightsSingle = {}
-        order = list(self.data.columns)
-        compared = []
-        heightOffset = self.dataRange / 10
-        baseheight = self.dataMax + self.dataRange / 7
-        for comparison in self.kwargs["compare"]:
-            if comparison[0] not in compared and comparison[1] not in compared:
-                heightsComp.append({"start":comparison[0],"end":comparison[1],"height":baseheight})
-                heightsSingle[comparison[0]] = baseheight
-                heightsSingle[comparison[1]] = baseheight
-            else:
-                nOccurences = compared.count(comparison[0]) if compared.count(comparison[0]) > compared.count(comparison[1]) else compared.count(comparison[1]) 
-                heightsComp.append({"start":comparison[0],"end":comparison[1],"height":baseheight + heightOffset*nOccurences})
-                if comparison[0] in compared and comparison[1] in compared:
-                    verticalLines[comparison[0]+f"__{nOccurences}"] = {"y":baseheight - heightOffset/2 + heightOffset*nOccurences, "x":verticalLines[comparison[0]]["x"]}
-                    verticalLines[comparison[1]+f"__{nOccurences}"] = {"y":baseheight - heightOffset/2 + heightOffset*nOccurences, "x":verticalLines[comparison[1]]["x"]}
-                    heightsSingle[comparison[0]+f"__{nOccurences}"] = baseheight + heightOffset*nOccurences
-                    heightsSingle[comparison[1]+f"__{nOccurences}"] = baseheight + heightOffset*nOccurences
-                elif comparison[0] in compared:
-                    verticalLines[comparison[0]+f"__{nOccurences}"] = {"y":baseheight - heightOffset/2 + heightOffset*nOccurences, "x":verticalLines[comparison[0]]["x"]}
-                    heightsSingle[comparison[0]+f"__{nOccurences}"] = baseheight + heightOffset*nOccurences
-                    heightsSingle[comparison[1]] = baseheight + heightOffset*nOccurences
-                elif comparison[0] in compared:
-                    verticalLines[comparison[1]+f"__{nOccurences}"] = {"y":baseheight - heightOffset/2 + heightOffset*nOccurences, "x":verticalLines[comparison[1]]["x"]}
-                    heightsSingle[comparison[1]+f"__{nOccurences}"] = baseheight +  heightOffset*nOccurences
-                    heightsSingle[comparison[0]] = baseheight + heightOffset*nOccurences
-            start = False; first = True
-            for item in order:
-                if item == comparison[0] or item == comparison[1] and first==True: start = True
-                if start == True and (item == comparison[0] or item == comparison[1]) and first == False: break
-                if start == True: compared.append(item); first = False
-        return heightsComp, heightsSingle, verticalLines
-
-    def drawStars(self):
-        pass
+        statsIndicators = Indicator(self.data.shape[1],self.artist,self.dataRange)
+        statsIndicators.newConnections([(self.boxMap[comparison[0]]["index"],self.boxMap[comparison[1]]["index"]) for comparison in self.kwargs["compare"]])
+        statsIndicators.drawConnection(self.ax,self.artist,"black",1)
+        # code for stars here or in Indicator class?
 
     ##
     # Styling
@@ -209,7 +150,7 @@ class Boxplot:
             self.ax.set_xticklabels(self.data.columns)
         else:
             # for some reason this does not match the center. Center propably not where it should be
-            self.ax.set_xticks([xpos for xpos in self.boxXPosDict])
+            self.ax.set_xticks([xpos for xpos in self.GroupXPosMap])
             self.ax.set_xticklabels([grouplabel for grouplabel in self.kwargs["groups"]])
     
     def styleTickLabels(self):
