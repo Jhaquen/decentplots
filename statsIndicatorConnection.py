@@ -91,5 +91,16 @@ class Indicator:
                 boxXPos = topWhiskers[boxIndex].get_path().get_extents().x0
                 ax.plot([boxXPos,boxXPos],[conY,height],color=color,lw=lw)
     
-    def drawStars(self,data,ax,artist,color):
-        pass
+    def drawStars(self,data,ax,artists,color,fontsize):
+        # this code is copy paste, see above, maybe rewrite for ego
+        topWhiskers = [whisker for i,whisker in enumerate(artists["whiskers"]) if i%2==0]
+        for (i,result), (connectionIndex, connection) in zip(data.items(), self.startStopMap.items()):
+            startX = topWhiskers[connection["start"]].get_path().get_extents().x0
+            endX = topWhiskers[connection["stop"]].get_path().get_extents().x0
+            middle = self.calcMiddle(startX, endX)
+            heightoffset = 100 if result["significance"]=="n.s." else 1000
+            height = self.levelHeightMap[connection["level"]] + self.datarange/heightoffset
+            ax.text(middle, height, result["significance"], horizontalalignment="center", color=color, fontsize=fontsize)
+
+    def calcMiddle(self,start,end):
+        return start + ((end - start) / 2) 

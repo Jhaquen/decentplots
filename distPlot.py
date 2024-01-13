@@ -160,7 +160,7 @@ class DistributionPlot:
         return [stats.wilcoxon(samp1, samp2), "wilcoxonSingedRang"]
     
     def pvalueToSigStr(self, pvalue):
-        if pvalue > 0.05: return "ns"
+        if pvalue > 0.05: return "n.s."
         elif pvalue > 0.01: return "*"
         elif pvalue > 0.001: return "**"
         else: return "***" 
@@ -173,7 +173,7 @@ class DistributionPlot:
         statsIndicators = Indicator(self.data.shape[1],self.artist,self.dataRange)
         statsIndicators.newConnections([(self.boxMap[comparison[0]]["index"],self.boxMap[comparison[1]]["index"]) for comparison in self.kwargs["compare"]])
         statsIndicators.drawConnections(self.ax,self.artist,"black",1)
-        statsIndicators.drawStars(self.comparisonResults,self.ax,self.artist,"black")
+        statsIndicators.drawStars(self.comparisonResults,self.ax,self.artist,"black",7)
 
     ##
     # Styling

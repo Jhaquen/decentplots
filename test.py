@@ -27,7 +27,7 @@ plot = box.Boxplot(
 )
 """
 #print(plot.simpleStats)
-print(plot.normality)
-print(plot.varianceHomogenity)
-print(plot.comparisonResults)
+#print(plot.normality)
+#print(plot.varianceHomogenity)
+#print(plot.comparisonResults)
 plt.show()
