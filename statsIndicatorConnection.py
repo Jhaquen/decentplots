@@ -77,7 +77,7 @@ class Indicator:
         return startHeightMap
 
 
-    def drawConnection(self,ax,artists,color,lw):
+    def drawConnections(self,ax,artists,color,lw):
         # this simply draws the connection
         vLineStartHeight = self.calcHeightForVlines()
         topWhiskers = [whisker for i,whisker in enumerate(artists["whiskers"]) if i%2==0]
@@ -90,3 +90,6 @@ class Indicator:
                 # Change how X-Pos is calculated
                 boxXPos = topWhiskers[boxIndex].get_path().get_extents().x0
                 ax.plot([boxXPos,boxXPos],[conY,height],color=color,lw=lw)
+    
+    def drawStars(self,data,ax,artist,color):
+        pass
