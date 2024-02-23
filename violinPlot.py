@@ -6,11 +6,13 @@ import numpy as np
 class Violinplot(DistributionPlot):
 
     #ingroupdistance values above 0.8 dont work, why???
+    #alternative to full is scatter
     vioplotKwargDefaults = {
         "ingroupDistance": 0.8,
         "groupDistance": 4,
         "kind": "full"
     }
+
 
     def __init__(self,data,ax,**kwargs):
         super().kwargDefaults.update(self.vioplotKwargDefaults)

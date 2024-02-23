@@ -69,6 +69,7 @@ class Boxplot(DistributionPlot):
         else:
             if type(self.kwargs["color"]) == list: self.colorBoxes_DiffColorInGroup_List()
             elif type(list(self.kwargs["color"].values())[0]) == tuple: self.colorBoxes_OneColorPerGroup_Dict()
+            elif type(list(self.kwargs["color"])) == dict: self.colorBoxes_DiffColorInGroup_Dict()
             else: raise Exception
             
     def colorBoxes_NoGroups(self):
@@ -96,3 +97,8 @@ class Boxplot(DistributionPlot):
                 colors += [self.kwargs["color"][group] for _ in self.kwargs["groups"][group]]
         for box,color in zip(self.artist["boxes"],colors):
             box.set_facecolor(color)
+
+    def colorBoxes_DiffColorInGroup_Dict(self):
+        # This should color groups based on label with a list as value of dict, diffrent color in group
+        raise Exception
+    

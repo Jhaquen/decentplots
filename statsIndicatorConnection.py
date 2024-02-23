@@ -2,15 +2,14 @@ import numpy as np
 
 class Indicator:
 
-    currentConnectionNumber = 0
-    startStopMap = {}
-    levelHeightMap = {}
-    vLineStartMap = {}
-
     def __init__(self,length,artists,datarange):
         # length represents the number of boxes, columns in array
         self.datarange = datarange
         self.grid = np.zeros((1,length))
+        self.startStopMap = {}
+        self.currentConnectionNumber = 0
+        self.levelHeightMap = {}
+        self.vLineStartMap = {}
         self.baseHeights = self.getBaseHeight(artists)
         self.calcHeightForLevel(0)
     
@@ -32,6 +31,7 @@ class Indicator:
     
     def addConnectionOnLevel(self,height,start,stop):
         # this should block rows in self.grid according to passed positions
+        if start>stop: start, stop = [stop, start] # makes sure box 3 can be compared to box 1 etc
         for i in range(start,stop+1):
             self.grid[height][i] = self.currentConnectionNumber+1
     

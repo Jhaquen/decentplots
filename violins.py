@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.patches as ptc
 from scipy.stats import gaussian_kde
+from scipy.signal import savgol_filter
 
 class ViolinHalf:
 
